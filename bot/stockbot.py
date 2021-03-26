@@ -5,30 +5,28 @@ from dotenv import load_dotenv
 from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.fundamentaldata import FundamentalData
 from pprint import pprint
+from aiohttp import request
 load_dotenv()
 
 client = commands.Bot(command_prefix = '.')
-
-
-def callbackfunc(question):
-    fd = FundamentalData(key=os.getenv('TOKEN'), output_format='pandas')
-    data, meta_data = fd.get_company_overview(symbol=question)
-    print(data['PERatio'])
-    print(data['PriceToSalesRatioTTM'])
-    print(data['PriceToBookRatio'])
-    print(data['ForwardAnnualDividendYield'])
+tokenkey = os.getenv('TOKEN')
 
 @client.event
 async def on_ready():
     print('Bot is ready')
 
-@client.event 
-async def on_member_join(member):
-    print(f'{member} has joined the server!')
-
 @client.command()
 async def f(ctx, *, question):
-    await ctx.send(f'Ticker: {question}\nStats: {callbackfunc(question)}')
+
+    URL = f'https://www.alphavantage.co/query?function=OVERVIEW&symbol={question}&apikey={tokenkey}'
+
+    async with request('GET', URL, headers={}) as response:
+        if response.status == 200:
+            data = await response.json()
+            await ctx.send(f"""Ticker: {question.upper()}\nP/E: {data['PERatio']}\nP/B: {data['PriceToBookRatio']}\nP/S: {data['PriceToSalesRatioTTM']}\nDividend yield: {data['DividendYield']}%""")
+        else:
+            await ctx.send(f'API Returned a {response.status} status' )
+   
 
 @client.command()
 async def ping(ctx):
