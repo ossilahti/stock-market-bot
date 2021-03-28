@@ -1,5 +1,6 @@
 import os
 import discord
+from discord import Embed
 from discord.ext import commands
 from dotenv import load_dotenv
 from alpha_vantage.timeseries import TimeSeries
@@ -23,7 +24,10 @@ async def f(ctx, *, question):
     async with request('GET', URL, headers={}) as response:
         if response.status == 200:
             data = await response.json()
-            await ctx.send(f"""Ticker: {question.upper()}\nP/E: {data['PERatio']}\nP/B: {data['PriceToBookRatio']}\nP/S: {data['PriceToSalesRatioTTM']}\nDividend yield: {data['DividendYield']}%""")
+            embed = Embed(title=f'Ticker: {question.upper()}',
+                          description=f"""P/E: {data['PERatio']}\nP/B: {data['PriceToBookRatio']}\nP/S: {data['PriceToSalesRatioTTM']}\nDividend yield: {data['DividendYield']}""",
+                          colour = 0x2ecc71)
+            await ctx.send(embed=embed)
         else:
             await ctx.send(f'API Returned a {response.status} status' )
    
