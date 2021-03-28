@@ -2,7 +2,7 @@ import os
 import discord
 import json
 import re
-from httpqueries import get_income_data, get_company_overview
+from httpqueries import get_income_data, get_company_overview, get_earnings
 from formulas import *
 from discord import Embed
 from discord.ext import commands
@@ -26,7 +26,15 @@ async def f(ctx, *, question):
         rev_data1 = parse_data(income_data[0]['totalRevenue'])
         rev_data2 = parse_data(income_data[1]['totalRevenue'])
     except:
-        await ctx.send('API failed to connect')
+        await ctx.send('API failed to connect to Income Data.')
+
+    try:
+        earnings_json = await get_earnings(question)
+        earnings_data = earnings_json['annualEarnings']
+        earnings_now = parse_data(earnings_data[0]['reportedEPS'])
+        earnings_prev = parse_data(earnings_data[1]['reportedEPS'])
+    except:
+        await ctx.send('API failed to connect to Earnings Data.')    
 
     try:
         data = await get_company_overview(question)
@@ -44,12 +52,12 @@ async def f(ctx, *, question):
                         value = f"P/E: {data['PERatio']}\nP/B: {data['PriceToBookRatio']}\nP/S: {data['PriceToSalesRatioTTM']}\nForward P/E: {data['ForwardPE']}\nEV/Revenue: {data['EVToRevenue']}\nDividend rate: {dividend} %", 
                         inline = True)
 
-        embed.add_field(name = 'Growth',
-                        value = f"Revenue Growth: {rev_growth(rev_data1, rev_data2)} %",
+        embed.add_field(name = 'Growth (YoY)',
+                        value = f"Revenue Growth: {revenue_growth(rev_data1, rev_data2)} %\nEPS Growth: {eps_growth(earnings_now, earnings_prev)} %",
                         inline = True)
         await ctx.send(embed=embed)
     except:
-        await ctx.send('API failed to connect')
+        await ctx.send('API failed to connect to Company Overview.')
    
 
 @client.command()

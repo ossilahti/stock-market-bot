@@ -21,3 +21,11 @@ async def get_company_overview(question):
             return await response.json()
         else:
             raise Exception('Failed to retrieve data of company overview.')
+
+async def get_earnings(question):
+
+    async with request('GET', f"https://www.alphavantage.co/query?function=EARNINGS&symbol={question}&apikey={market_key}", headers={}) as response:
+        if response.status == 200:
+            return await response.json()
+        else:
+            raise Exception("Failed to retrieve data of company's earnings")
