@@ -1,11 +1,17 @@
-import discord
 import json
 
 def percentage_growth(now, prev):
-    return round((float((float(now) - float(prev)) / abs(float(prev))) * 100), 2)
-    
+    try:
+        return round((float((float(now) - float(prev)) / abs(float(prev))) * 100), 2)
+    except ZeroDivisionError:
+        return 'Dividing by zero'
+    except TypeError:
+        return 'Formatting problem'
+    except ValueError:
+        return 'Formatting problem'
+
 def parse_data(data):
     return json.dumps(data).replace('"', '')
 
-def gross_margin(now, prev):
-    return round((float((float(now) - float(prev)) / abs(float(now))) * 100), 2)
+def gross_margin(revenue, grossprofit):
+    return round(float((float(grossprofit) / float(revenue)) * 100), 2)

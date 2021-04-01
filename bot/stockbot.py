@@ -2,7 +2,7 @@ import os
 import discord
 import json
 import re
-from httpqueries import get_income_data, get_company_overview, get_earnings
+from httpqueries import get_company_overview, get_earnings, get_income_data
 from formulas import *
 from discord import Embed
 from discord.ext import commands
@@ -24,22 +24,22 @@ async def f(ctx, *, question):
     try: 
         response_json = await get_income_data(question)
         income_data = response_json['annualReports']
-        rev_data1 = parse_data(income_data[0]['totalRevenue'])
-        rev_data2 = parse_data(income_data[1]['totalRevenue'])
+        rev_now = parse_data(income_data[0]['totalRevenue'])
+        rev_prev = parse_data(income_data[1]['totalRevenue'])
         net_income_now = parse_data(income_data[0]['netIncome'])
         net_income_prev = parse_data(income_data[1]['netIncome'])
-        cost_of_goods = parse_data(income_data[0]['costofGoodsAndServicesSold'])
+        gross_profit = parse_data(income_data[0]['grossProfit'])
     except:
-        await ctx.send('API failed to connect to Income Data.')
+        await ctx.send(f"Can't bring data for {question.upper()}. IPO'ed last year?")
 
     # Earnings data
+    ''' 
     try:
         earnings_json = await get_earnings(question)
         earnings_data = earnings_json['annualEarnings']
-        earnings_now = parse_data(earnings_data[0]['reportedEPS'])
-        earnings_prev = parse_data(earnings_data[1]['reportedEPS'])
     except:
         await ctx.send('API failed to connect to Earnings Data.')    
+    '''
 
     # Company overview data
     try:
@@ -64,15 +64,18 @@ async def f(ctx, *, question):
                         inline = True)
 
         embed.add_field(name = 'Growth (YoY)',
-                        value = f"Revenue Growth: {percentage_growth(rev_data1, rev_data2)} %\nEPS Growth: {percentage_growth(earnings_now, earnings_prev)} %\nNet Income Growth: {percentage_growth(net_income_now, net_income_prev)} %",
+                        value = f"Revenue Growth: {percentage_growth(rev_now, rev_prev)} %\nNet Income Growth: {percentage_growth(net_income_now, net_income_prev)} %",
                         inline = True)
 
         embed.add_field(name = 'Effectiveness & Profitability',
-                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_data1, cost_of_goods)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %",
+                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_now, gross_profit)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %",
                         inline = False)
+    except: 
+        await ctx.send(f"Could not bring company overview for {question.upper()}.")
+    try:
         await ctx.send(embed=embed)
     except:
-        await ctx.send('API failed to connect to Company Overview.')
+        await ctx.send('Could not send the information about the stock')
    
 
 @client.command()
