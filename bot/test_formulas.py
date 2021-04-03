@@ -10,4 +10,5 @@ class TestFormulas(unittest.TestCase):
         self.assertAlmostEqual(percentage_growth('jono', 3), 'Formatting problem')
         self.assertAlmostEqual(percentage_growth(1, 0), 'Dividing by zero')
         self.assertAlmostEqual(percentage_growth('',''), 'Formatting problem')
+        self.assertAlmostEqual(percentage_growth(None, None), 'Formatting problem')
 

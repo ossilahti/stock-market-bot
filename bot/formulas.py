@@ -15,3 +15,8 @@ def parse_data(data):
 
 def gross_margin(revenue, grossprofit):
     return round(float((float(grossprofit) / float(revenue)) * 100), 2)
+
+#def eps_output(eps):
+    
+
+# {earnings_data[i]['fiscalDateEnding']}

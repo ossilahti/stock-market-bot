@@ -3,11 +3,12 @@ import discord
 import json
 import re
 from httpqueries import get_company_overview, get_earnings, get_income_data
-from formulas import *
+from formulas import percentage_growth,  gross_margin, parse_data
 from discord import Embed
 from discord.ext import commands
 from dotenv import load_dotenv
 from aiohttp import request
+from tabulate import tabulate
 load_dotenv()
 
 client = commands.Bot(command_prefix = '.')
@@ -16,6 +17,36 @@ tokenkey = os.getenv('MARKET')
 @client.event
 async def on_ready():
     print('Bot is ready')
+
+@client.command()
+async def e(ctx, *, question):
+    try:
+        eps = []
+        earnings_json = await get_earnings(question)
+        earnings_data = earnings_json['annualEarnings']
+
+        for i in range(len(earnings_data)):
+            if i < 10:
+                eps.append(parse_data(earnings_data[i]['reportedEPS']))
+
+        epsstring = ""
+        for index in range(len(eps)):
+            epsstring += f"{earnings_data[index]['fiscalDateEnding']}         | {eps[index]}\n"
+        header_eps = "Fiscal year ending | EPS\n-------------------------\n"
+    except:
+        await ctx.send(f'Could not find more than {i} year(s) of data')
+
+    try:
+        data = await get_company_overview(question)
+        embed = Embed(title=f"Earnings data for {data['Name']}",
+                    colour = 0x2ecc71)
+
+        embed.add_field(name = "Development",
+                        value = f"```{header_eps}{epsstring}```")
+        await ctx.send(embed=embed)
+    except:
+        await ctx.send('Could not send the message')
+
 
 @client.command()
 async def f(ctx, *, question):
@@ -30,16 +61,16 @@ async def f(ctx, *, question):
         net_income_prev = parse_data(income_data[1]['netIncome'])
         gross_profit = parse_data(income_data[0]['grossProfit'])
     except:
-        await ctx.send(f"Can't bring data for {question.upper()}. IPO'ed last year?")
+        await ctx.send(f"Can't bring income data for {question.upper()}. IPO'ed last year?")
 
     # Earnings data
-    ''' 
+    
     try:
         earnings_json = await get_earnings(question)
         earnings_data = earnings_json['annualEarnings']
     except:
         await ctx.send('API failed to connect to Earnings Data.')    
-    '''
+    
 
     # Company overview data
     try:
@@ -68,8 +99,9 @@ async def f(ctx, *, question):
                         inline = True)
 
         embed.add_field(name = 'Effectiveness & Profitability',
-                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_now, gross_profit)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %",
+                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_now, gross_profit)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %\nEPS: {earnings_data[0]['reportedEPS']}",
                         inline = False)
+
     except: 
         await ctx.send(f"Could not bring company overview for {question.upper()}.")
     try:
@@ -77,9 +109,9 @@ async def f(ctx, *, question):
     except:
         await ctx.send('Could not send the information about the stock')
    
-
-@client.command()
-async def ping(ctx):
-    await ctx.send(f'Your ping is {round(client.latency * 1000)} ms')
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+        await ctx.send(f'That is not a command!')
 
 client.run(os.getenv('TOKEN'))
