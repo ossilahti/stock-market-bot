@@ -63,15 +63,6 @@ async def f(ctx, *, question):
     except:
         await ctx.send(f"Can't bring income data for {question.upper()}. IPO'ed last year?")
 
-    # Earnings data
-    
-    try:
-        earnings_json = await get_earnings(question)
-        earnings_data = earnings_json['annualEarnings']
-    except:
-        await ctx.send('API failed to connect to Earnings Data.')    
-    
-
     # Company overview data
     try:
         data = await get_company_overview(question)
@@ -99,7 +90,7 @@ async def f(ctx, *, question):
                         inline = True)
 
         embed.add_field(name = 'Effectiveness & Profitability',
-                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_now, gross_profit)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %\nEPS: {earnings_data[0]['reportedEPS']}",
+                        value = f"ROA: {roa} %\nROE: {roe} %\nGross margin: {gross_margin(rev_now, gross_profit)} %\nOperating margin: {operating_margin} %\nProfit margin: {profit_margin} %",
                         inline = False)
 
     except: 
