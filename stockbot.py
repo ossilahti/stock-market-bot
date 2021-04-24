@@ -5,6 +5,7 @@ import re
 from httpqueries import get_company_overview, get_earnings, get_income_data, get_timeseries
 from formulas import percentage_growth,  gross_margin, parse_data
 from discord import Embed
+from yahoo_finance import Share
 from discord.ext import commands
 from dotenv import load_dotenv
 from aiohttp import request
