@@ -29,3 +29,11 @@ async def get_earnings(question):
             return await response.json()
         else:
             raise Exception("Failed to retrieve data of company's earnings")
+
+async def get_timeseries(question):
+
+    async with request('GET', f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={question}&apikey={market_key}", headers={}) as response:
+        if response.status == 200:
+            return await response.json()
+        else:
+            raise Exception("Failed to retrieve data of company's earnings")
