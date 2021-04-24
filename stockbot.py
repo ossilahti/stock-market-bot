@@ -2,9 +2,10 @@ import os
 import discord
 import json
 import re
-from httpqueries import get_company_overview, get_earnings, get_income_data
+from httpqueries import get_company_overview, get_earnings, get_income_data, get_timeseries
 from formulas import percentage_growth,  gross_margin, parse_data
 from discord import Embed
+from yahoo_finance import Share
 from discord.ext import commands
 from dotenv import load_dotenv
 from aiohttp import request
@@ -18,7 +19,7 @@ tokenkey = os.getenv('MARKET')
 async def on_ready():
     print('Bot is ready')
 
-@client.command()
+@client.command(aliases=['earnings'])
 async def e(ctx, *, question):
     try:
         eps = []
@@ -48,7 +49,7 @@ async def e(ctx, *, question):
         await ctx.send('Could not send the message')
 
 
-@client.command()
+@client.command(aliases=['funda'])
 async def f(ctx, *, question):
 
     # Income data
@@ -99,7 +100,26 @@ async def f(ctx, *, question):
         await ctx.send(embed=embed)
     except:
         await ctx.send('Could not send the information about the stock')
-   
+    
+
+@client.command(aliases=['price'])
+async def p(ctx, *, question):
+    response_json = await get_timeseries(question)
+    metadata = response_json['Meta Data']
+    timeseries = response_json['Time Series (Daily)'][metadata['3. Last Refreshed']]
+    
+    try:
+        embed = Embed(title=f"Daily time series for {question.upper()}",
+                      description = f"Last refreshed: {metadata['3. Last Refreshed']}",
+                      colour = 0xc27c0e)
+        embed.add_field(name = 'Time series',
+                        value= f"```Open:   {timeseries['1. open']}\nHigh:   {timeseries['2. high']}\nLow:    {timeseries['3. low']}\nClose:  {timeseries['4. close']}\nVolume: {timeseries['6. volume']}```",
+                        inline=False)
+        await ctx.send(embed=embed) 
+    except:
+        await ctx.send('Could not send the time series of the stock')
+
+
 @client.event
 async def on_command_error(ctx, error):
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
